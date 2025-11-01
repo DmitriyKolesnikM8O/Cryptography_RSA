@@ -68,7 +68,7 @@ namespace CryptoLib.Primality
         /// Вспомогательный метод для генерации случайного BigInteger в заданном диапазоне [minValue, maxValue].
         /// Эта реализация использует метод отбора (rejection sampling) для обеспечения равномерного распределения.
         /// </summary>
-        protected static BigInteger GenerateRandomBigInteger(BigInteger minValue, BigInteger maxValue)
+        public static BigInteger GenerateRandomBigInteger(BigInteger minValue, BigInteger maxValue)
         {
             if (minValue > maxValue)
                 throw new ArgumentException("minValue не может быть больше maxValue");

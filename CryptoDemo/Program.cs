@@ -1,2 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using CryptoDemo.Demos;
+
+// Task3_RsaDemo.Run();
+Task4_WienersAttackDemo.Run();

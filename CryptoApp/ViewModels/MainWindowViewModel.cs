@@ -11,6 +11,8 @@ using CryptoLib.Interfaces;
 using CryptoLib.Primality.Implementations;
 using CryptoLib.RSA;
 using CryptoLib.RSA.Models;
+using CryptoLib.Attacks;
+using CryptoLib.Attacks.Models;
 
 namespace CryptoApp.ViewModels
 {
@@ -39,14 +41,14 @@ namespace CryptoApp.ViewModels
 
         // --- Общие свойства ---
         [ObservableProperty] private string _statusMessage = "Готово к работе.";
-        [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(GenerateKeysCommand))] [NotifyCanExecuteChangedFor(nameof(EncryptCommand))] [NotifyCanExecuteChangedFor(nameof(DecryptCommand))] [NotifyCanExecuteChangedFor(nameof(CheckPrimalityCommand))] private bool _isBusy = false;
-        
+        [ObservableProperty][NotifyCanExecuteChangedFor(nameof(GenerateKeysCommand))][NotifyCanExecuteChangedFor(nameof(EncryptCommand))][NotifyCanExecuteChangedFor(nameof(DecryptCommand))][NotifyCanExecuteChangedFor(nameof(CheckPrimalityCommand))] private bool _isBusy = false;
+
         // --- Сервисы и константы ---
         private readonly ICryptoMathService _mathService = new CryptoMathService();
         private RsaKeyPair? _currentKeyPair;
         private const double Probability = 0.9999;
         private const double PrimalityCheckProbability = 0.9999;
-        
+
         // --- Команды для вкладки RSA ---
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private async Task GenerateKeysAsync()
@@ -126,7 +128,7 @@ namespace CryptoApp.ViewModels
                 };
 
                 bool isPrime = primalityTest.IsPrime(number, PrimalityCheckProbability);
-                
+
                 if (isPrime) { PrimalityTestResult = $"Число, вероятно, простое (с вероятностью > {PrimalityCheckProbability:P2})."; IsResultPrime = true; }
                 else { PrimalityTestResult = "Число является составным."; IsResultPrime = false; }
 
@@ -135,8 +137,91 @@ namespace CryptoApp.ViewModels
             catch (Exception ex) { PrimalityTestResult = $"Ошибка: {ex.Message}"; }
             finally { IsBusy = false; }
         }
-        
+
         private bool CanExecuteCommands() => !IsBusy;
         private void ClearFields() { _currentKeyPair = null; PublicKeyE = ""; PublicKeyN = ""; PrivateKeyD = ""; EncryptedMessage = ""; DecryptedMessage = ""; }
+            
+
+        [ObservableProperty]
+        private string _wienersAttackE = "";
+
+        [ObservableProperty]
+        private string _wienersAttackN = "";
+
+        [ObservableProperty]
+        private string _wienersAttackResultStatus = "";
+
+        [ObservableProperty]
+        private string? _wienersAttackFoundD;
+
+        [ObservableProperty]
+        private string? _wienersAttackFoundPhi;
+
+        [ObservableProperty]
+        private IReadOnlyList<ContinuedFraction>? _wienersAttackConvergents;
+
+        // Сервис для атаки. Создаем его один раз.
+        private readonly IWienersAttackService _wienersAttackService = new WienersAttackService();
+
+        [RelayCommand]
+        private void PreloadWeakKey()
+        {
+            // Используем тот же 100% рабочий ключ из учебника
+            WienersAttackE = "17993";
+            WienersAttackN = "90581";
+            StatusMessage = "Уязвимый ключ загружен.";
+            ClearWienersAttackResults();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
+        private void ExecuteWienersAttack()
+        {
+            IsBusy = true;
+            StatusMessage = "Выполняется атака Винера...";
+            ClearWienersAttackResults();
+
+            try
+            {
+                if (!BigInteger.TryParse(WienersAttackE, out var e) || !BigInteger.TryParse(WienersAttackN, out var n))
+                {
+                    WienersAttackResultStatus = "Ошибка: E и N должны быть корректными числами.";
+                    return;
+                }
+
+                var weakPublicKey = new RsaPublicKey(e, n);
+                var result = _wienersAttackService.Attack(weakPublicKey);
+
+                // Обновляем UI результатами
+                WienersAttackConvergents = result.Convergents;
+                if (result.IsSuccessful)
+                {
+                    WienersAttackResultStatus = "УСПЕХ: Секретный ключ найден!";
+                    WienersAttackFoundD = result.FoundD.ToString();
+                    WienersAttackFoundPhi = result.FoundPhi.ToString();
+                }
+                else
+                {
+                    WienersAttackResultStatus = "Атака не удалась. Ключ, вероятно, не уязвим.";
+                }
+
+                StatusMessage = "Атака Винера завершена.";
+            }
+            catch (Exception ex)
+            {
+                WienersAttackResultStatus = $"Ошибка: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private void ClearWienersAttackResults()
+        {
+            WienersAttackResultStatus = "";
+            WienersAttackFoundD = null;
+            WienersAttackFoundPhi = null;
+            WienersAttackConvergents = null;
+        }
     }
 }

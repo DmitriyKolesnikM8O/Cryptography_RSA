@@ -66,10 +66,52 @@
             </StackPanel>
         </TabItem>
 
-        <!-- ВКЛАДКА №3: АТАКА ВИНЕРА (ЗАГЛУШКА) -->
         <TabItem Header="Атака Винера">
-            <TextBlock Text="Здесь будет интерфейс для демонстрации атаки Винера." HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </TabItem>
+        <Grid ColumnDefinitions="320, *" Margin="10">
+            
+            <!-- Левая колонка: Управление -->
+            <StackPanel Spacing="10" Margin="0,0,10,0">
+                <TextBlock Text="Уязвимый открытый ключ:" FontSize="16"/>
+                <TextBlock Text="Экспонента (E):"/>
+                <TextBox Text="{Binding WienersAttackE}" IsEnabled="{Binding !IsBusy}"/>
+                <TextBlock Text="Модуль (N):"/>
+                <TextBox Text="{Binding WienersAttackN}" IsEnabled="{Binding !IsBusy}"/>
+                
+                <Button Content="Предзаполнить уязвимым ключом" Command="{Binding PreloadWeakKeyCommand}" Margin="0,10,0,0"/>
+                <Button Content="Выполнить атаку" Command="{Binding ExecuteWienersAttackCommand}"/>
+            </StackPanel>
+            
+            <!-- Правая колонка: Результаты -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10">
+                <ScrollViewer>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Результаты атаки:" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding WienersAttackResultStatus}"/>
+
+                        <TextBlock Text="Найденный секретный ключ (d):" FontWeight="SemiBold" IsVisible="{Binding WienersAttackFoundD, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBox Text="{Binding WienersAttackFoundD}" IsReadOnly="True" IsVisible="{Binding WienersAttackFoundD, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                        <TextBlock Text="Восстановленная функция Эйлера (phi):" FontWeight="SemiBold" IsVisible="{Binding WienersAttackFoundPhi, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBox Text="{Binding WienersAttackFoundPhi}" IsReadOnly="True" IsVisible="{Binding WienersAttackFoundPhi, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        
+                        <TextBlock Text="Вычисленные подходящие дроби (k/d):" FontWeight="SemiBold" Margin="0,10,0,0" IsVisible="{Binding WienersAttackConvergents, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        <!-- Список для отображения дробей -->
+                        <ItemsControl ItemsSource="{Binding WienersAttackConvergents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding NumeratorK}"/>
+                                        <Run Text="/"/>
+                                        <Run Text="{Binding DenominatorD}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </TabItem>
 
     </TabControl>
 </Window>

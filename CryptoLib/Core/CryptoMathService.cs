@@ -102,7 +102,7 @@ namespace CryptoLib.Core
 
             while (exponent > 0)
             {
-                if (exponent % 2 == 1)
+                if ((exponent & 1) == 1)
                 {
                     result = result * value % modulus;
                 }
@@ -173,9 +173,9 @@ namespace CryptoLib.Core
             int j = 1;
             
             // 3. Обработка двоек в 'a'
-            while (a % 2 == 0)
+            while ((a & 1) == 0)
             {
-                a /= 2;
+                a >>= 1;
                 var n_mod_8 = n % 8;
                 if (n_mod_8 == 3 || n_mod_8 == 5)
                 {

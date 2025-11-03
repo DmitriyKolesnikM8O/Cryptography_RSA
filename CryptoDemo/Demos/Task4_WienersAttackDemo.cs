@@ -1,4 +1,3 @@
-// Файл: CryptoDemo/Demos/Task4_WienersAttackDemo.cs
 using System.Numerics;
 using CryptoLib.Attacks;
 using CryptoLib.Interfaces;

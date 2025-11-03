@@ -23,8 +23,9 @@ namespace CryptoLib.RSA
 
         public RsaKeyPair GenerateKeyPair()
         {
-            return _keyGenerator.GenerateKeyPair();
+            return _keyGenerator.GenerateKeyPair(65537);
         }
+
 
         public BigInteger Encrypt(BigInteger message, RsaPublicKey key)
         {

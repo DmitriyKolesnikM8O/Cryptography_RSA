@@ -23,9 +23,9 @@ namespace CryptoLib.Primality.Implementations
             // Представляем (n - 1) в виде 2^s * d, где d - нечетное.
             BigInteger d = number - 1;
             int s = 0;
-            while (d % 2 == 0)
+            while ((d & 1) == 0) // // d % 2 == 0
             {
-                d /= 2;
+                d >>= 1;
                 s++;
             }
 

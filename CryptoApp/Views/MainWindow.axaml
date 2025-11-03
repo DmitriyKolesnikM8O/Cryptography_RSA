@@ -1,50 +1,35 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CryptoApp.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="CryptoApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="Криптографический инструментарий RSA"
-        Width="800" Height="600">
+        Width="850" Height="600">
 
-    <Grid Margin="10">
-        <!-- херь эта создает вкладки -->
-        <TabControl>
-        
+    <TabControl>
+        <!-- ВКЛАДКА №1: RSA ШИФРОВАНИЕ (УЖЕ РАБОТАЕТ) -->
         <TabItem Header="RSA Шифрование">
             <DockPanel>
-                
-                <!-- Панель статуса внизу -->
                 <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" BorderBrush="LightGray" Padding="5" Margin="0,10,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="100" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-
-                <!-- Основной контент -->
                 <Grid ColumnDefinitions="*,*" Margin="10">
-                    <!-- Левая колонка -->
                     <StackPanel Grid.Column="0" Spacing="10" Margin="0,0,10,0">
                         <TextBlock Text="1. Генерация ключей" FontWeight="Bold"/>
                         <TextBlock Text="Битность (для p и q):"/>
-                        <ComboBox ItemsSource="{Binding AvailableBitLengths}" 
-                                    SelectedItem="{Binding SelectedBitLength}" 
-                                    IsEnabled="{Binding !IsBusy}"/>
+                        <ComboBox ItemsSource="{Binding AvailableBitLengths}" SelectedItem="{Binding SelectedBitLength}" IsEnabled="{Binding !IsBusy}"/>
                         <TextBlock Text="Тест простоты:"/>
                         <ComboBox ItemsSource="{Binding TestTypes}" SelectedItem="{Binding SelectedTestType}" IsEnabled="{Binding !IsBusy}"/>
                         <Button Content="Сгенерировать ключи" Command="{Binding GenerateKeysCommand}" HorizontalAlignment="Stretch"/>
-
                         <TextBlock Text="2. Шифрование" FontWeight="Bold" Margin="0,15,0,0"/>
                         <TextBlock Text="Сообщение (число):"/>
                         <TextBox Text="{Binding MessageToEncrypt}" IsEnabled="{Binding !IsBusy}"/>
                         <Button Content="Зашифровать" Command="{Binding EncryptCommand}" HorizontalAlignment="Stretch"/>
                     </StackPanel>
-
-                    <!-- Правая колонка -->
                     <StackPanel Grid.Column="1" Spacing="10" Margin="10,0,0,0">
                         <TextBlock Text="Сгенерированные ключи" FontWeight="Bold"/>
                         <TextBlock Text="Открытый ключ (E):"/>
@@ -53,7 +38,6 @@
                         <TextBox Text="{Binding PublicKeyN}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="80"/>
                         <TextBlock Text="Закрытый ключ (D):"/>
                         <TextBox Text="{Binding PrivateKeyD}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="80"/>
-
                         <TextBlock Text="3. Результаты" FontWeight="Bold" Margin="0,15,0,0"/>
                         <TextBlock Text="Зашифрованное сообщение (C):"/>
                         <TextBox Text="{Binding EncryptedMessage}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="80"/>
@@ -65,16 +49,27 @@
             </DockPanel>
         </TabItem>
 
-            <TabItem Header="Тестер простоты">
-                <TextBlock Text="Здесь будет интерфейс для проверки чисел на простоту."
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </TabItem>
+        <!-- ВКЛАДКА №2: ТЕСТЕР ПРОСТОТЫ (ИСПРАВЛЕННАЯ) -->
+        <TabItem Header="Тестер простоты">
+            <StackPanel Spacing="10" Margin="20">
+                <TextBlock Text="Введите число для проверки на простоту:" FontSize="16"/>
+                <TextBox Text="{Binding NumberToTest}" Watermark="Введите большое целое число" IsEnabled="{Binding !IsBusy}"/>
+                <TextBlock Text="Выберите метод тестирования:" FontSize="16" Margin="0,10,0,0"/>
+                <ComboBox ItemsSource="{Binding TestTypes}" SelectedItem="{Binding SelectedTestTypeForCheck}" IsEnabled="{Binding !IsBusy}"/>
+                <Button Content="Проверить" Command="{Binding CheckPrimalityCommand}" HorizontalAlignment="Stretch" Margin="0,10,0,0"/>
+                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" Margin="0,20,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Результат:" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding PrimalityTestResult}" FontSize="14" TextWrapping="Wrap" Margin="0,5,0,0" Foreground="{Binding IsResultPrime, Converter={StaticResource BoolToColorConverter}}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </TabItem>
 
-            <TabItem Header="Атака Винера">
-                <TextBlock Text="Здесь будет интерфейс для демонстрации атаки Винера."
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </TabItem>
-        </TabControl>
-    </Grid>
-    
+        <!-- ВКЛАДКА №3: АТАКА ВИНЕРА (ЗАГЛУШКА) -->
+        <TabItem Header="Атака Винера">
+            <TextBlock Text="Здесь будет интерфейс для демонстрации атаки Винера." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </TabItem>
+
+    </TabControl>
 </Window>

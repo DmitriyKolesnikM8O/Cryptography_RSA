@@ -5,8 +5,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CryptoLib.Core;
 using CryptoLib.Enums;
 using CryptoLib.Interfaces;
+using CryptoLib.Primality.Implementations;
 using CryptoLib.RSA;
 using CryptoLib.RSA.Models;
 
@@ -14,56 +16,50 @@ namespace CryptoApp.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        [ObservableProperty]
-        private int _selectedBitLength = 256;
+        // --- Свойства для вкладки RSA ---
+        [ObservableProperty] private int _selectedBitLength = 256;
         public List<int> AvailableBitLengths { get; } = new List<int> { 128, 256, 512, 1024 };
 
-        [ObservableProperty]
-        private PrimalityTestType _selectedTestType = PrimalityTestType.MillerRabin;
+        [ObservableProperty] private PrimalityTestType _selectedTestType = PrimalityTestType.MillerRabin;
         public IEnumerable<PrimalityTestType> TestTypes => Enum.GetValues(typeof(PrimalityTestType)).Cast<PrimalityTestType>();
-        
-        // --- ВОЗВРАЩАЕМ К НЕ-NULLABLE СТРОКАМ, ЧТОБЫ НЕ БЫЛО ПРЕДУПРЕЖДЕНИЙ ---
-        [ObservableProperty]
-        private string _publicKeyE = "";
-        [ObservableProperty]
-        private string _publicKeyN = "";
-        [ObservableProperty]
-        private string _privateKeyD = "";
 
-        [ObservableProperty]
-        private string _messageToEncrypt = "123456789";
-        [ObservableProperty]
-        private string _encryptedMessage = "";
-        [ObservableProperty]
-        private string _decryptedMessage = "";
-        
-        [ObservableProperty]
-        private string _statusMessage = "Готово к работе.";
-        
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(GenerateKeysCommand))]
-        [NotifyCanExecuteChangedFor(nameof(EncryptCommand))]
-        [NotifyCanExecuteChangedFor(nameof(DecryptCommand))]
-        private bool _isBusy = false;
+        [ObservableProperty] private string _publicKeyE = "";
+        [ObservableProperty] private string _publicKeyN = "";
+        [ObservableProperty] private string _privateKeyD = "";
 
+        [ObservableProperty] private string _messageToEncrypt = "123456789";
+        [ObservableProperty] private string _encryptedMessage = "";
+        [ObservableProperty] private string _decryptedMessage = "";
+
+        // --- Свойства для вкладки "Тестер простоты" ---
+        [ObservableProperty] private string _numberToTest = "15485863";
+        [ObservableProperty] private PrimalityTestType _selectedTestTypeForCheck = PrimalityTestType.MillerRabin;
+        [ObservableProperty] private string _primalityTestResult = "";
+        [ObservableProperty] private bool? _isResultPrime = null;
+
+        // --- Общие свойства ---
+        [ObservableProperty] private string _statusMessage = "Готово к работе.";
+        [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(GenerateKeysCommand))] [NotifyCanExecuteChangedFor(nameof(EncryptCommand))] [NotifyCanExecuteChangedFor(nameof(DecryptCommand))] [NotifyCanExecuteChangedFor(nameof(CheckPrimalityCommand))] private bool _isBusy = false;
+        
+        // --- Сервисы и константы ---
+        private readonly ICryptoMathService _mathService = new CryptoMathService();
         private RsaKeyPair? _currentKeyPair;
         private const double Probability = 0.9999;
-
+        private const double PrimalityCheckProbability = 0.9999;
+        
+        // --- Команды для вкладки RSA ---
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private async Task GenerateKeysAsync()
         {
             IsBusy = true;
-            StatusMessage = "Идет генерация ключей (это может занять время)...";
-            ClearFields(); // Очищаем поля перед новой генерацией
+            StatusMessage = "Идет генерация ключей...";
+            ClearFields();
 
             try
             {
-                int bits = SelectedBitLength;
-
                 await Task.Run(() =>
                 {
-                    // Создаем сервис прямо здесь
-                    IRsaService rsaService = new RsaService(SelectedTestType, Probability, bits);
+                    var rsaService = new RsaService(SelectedTestType, Probability, SelectedBitLength);
                     _currentKeyPair = rsaService.GenerateKeyPair();
                 });
 
@@ -74,32 +70,15 @@ namespace CryptoApp.ViewModels
                     PrivateKeyD = _currentKeyPair.PrivateKey.D.ToString();
                     StatusMessage = "Ключи успешно сгенерированы!";
                 }
-                else
-                {
-                    StatusMessage = "Не удалось сгенерировать ключи.";
-                }
-                
-                // --- УДАЛЯЕМ ДУБЛИРУЮЩИЙСЯ БЛОК ОТСЮДА ---
             }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Ошибка при генерации ключей: {ex.Message}";
-            }
-            finally
-            {
-                IsBusy = false;
-            }
+            catch (Exception ex) { StatusMessage = $"Ошибка: {ex.Message}"; }
+            finally { IsBusy = false; }
         }
 
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private void Encrypt()
         {
-            if (_currentKeyPair == null)
-            {
-                StatusMessage = "Сначала сгенерируйте ключи.";
-                return;
-            }
-            
+            if (_currentKeyPair == null) { StatusMessage = "Сначала сгенерируйте ключи."; return; }
             try
             {
                 var rsaService = new RsaService(SelectedTestType, Probability, SelectedBitLength);
@@ -108,21 +87,13 @@ namespace CryptoApp.ViewModels
                 EncryptedMessage = encrypted.ToString();
                 StatusMessage = "Сообщение успешно зашифровано.";
             }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Ошибка шифрования: {ex.Message}";
-            }
+            catch (Exception ex) { StatusMessage = $"Ошибка шифрования: {ex.Message}"; }
         }
 
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private void Decrypt()
         {
-            if (_currentKeyPair == null || string.IsNullOrEmpty(EncryptedMessage))
-            {
-                StatusMessage = "Сначала зашифруйте сообщение.";
-                return;
-            }
-
+            if (_currentKeyPair == null || string.IsNullOrEmpty(EncryptedMessage)) { StatusMessage = "Сначала зашифруйте сообщение."; return; }
             try
             {
                 var rsaService = new RsaService(SelectedTestType, Probability, SelectedBitLength);
@@ -131,22 +102,41 @@ namespace CryptoApp.ViewModels
                 DecryptedMessage = decrypted.ToString();
                 StatusMessage = "Сообщение успешно расшифровано.";
             }
-            catch (Exception ex)
+            catch (Exception ex) { StatusMessage = $"Ошибка дешифрования: {ex.Message}"; }
+        }
+
+        // --- Команда для вкладки "Тестер простоты" ---
+        [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
+        private void CheckPrimality()
+        {
+            IsBusy = true;
+            StatusMessage = "Выполняется проверка на простоту...";
+            IsResultPrime = null;
+
+            try
             {
-                StatusMessage = $"Ошибка дешифрования: {ex.Message}";
+                if (!BigInteger.TryParse(NumberToTest, out var number)) { PrimalityTestResult = "Ошибка: Введите корректное целое число."; return; }
+
+                IPrimalityTest primalityTest = SelectedTestTypeForCheck switch
+                {
+                    PrimalityTestType.Fermat => new FermatTest(_mathService),
+                    PrimalityTestType.SoloveyStrassen => new SoloveyStrassenTest(_mathService),
+                    PrimalityTestType.MillerRabin => new MillerRabinTest(_mathService),
+                    _ => throw new InvalidOperationException("Выбран неизвестный тест")
+                };
+
+                bool isPrime = primalityTest.IsPrime(number, PrimalityCheckProbability);
+                
+                if (isPrime) { PrimalityTestResult = $"Число, вероятно, простое (с вероятностью > {PrimalityCheckProbability:P2})."; IsResultPrime = true; }
+                else { PrimalityTestResult = "Число является составным."; IsResultPrime = false; }
+
+                StatusMessage = "Проверка завершена.";
             }
+            catch (Exception ex) { PrimalityTestResult = $"Ошибка: {ex.Message}"; }
+            finally { IsBusy = false; }
         }
         
         private bool CanExecuteCommands() => !IsBusy;
-        
-        private void ClearFields() 
-        { 
-            _currentKeyPair = null; 
-            PublicKeyE = ""; 
-            PublicKeyN = ""; 
-            PrivateKeyD = ""; 
-            EncryptedMessage = ""; 
-            DecryptedMessage = ""; 
-        }
+        private void ClearFields() { _currentKeyPair = null; PublicKeyE = ""; PublicKeyN = ""; PrivateKeyD = ""; EncryptedMessage = ""; DecryptedMessage = ""; }
     }
 }

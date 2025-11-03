@@ -62,6 +62,8 @@ namespace CryptoLib.Primality
         private int CalculateIterations(double probability)
         {
             return (int)Math.Ceiling(-Math.Log2(1 - probability));
+
+            // return 1; Это если нужно будет показать, как Ферма и Соловей-Разбойник умирают под 561 и другими числами Кармайкла
         }
         
         /// <summary>

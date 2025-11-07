@@ -47,7 +47,17 @@ namespace CryptoLib.RSA
                 {
                     // q = GenerateStrongPrime(_bitLength);
                     q = GeneratePrime(_bitLength);
-                } while (p == q);
+
+                    BigInteger difference = BigInteger.Abs(p - q);
+
+                    // 2^_bitLength / 2
+                    BigInteger threshold = BigInteger.Pow(2, (_bitLength / 4));
+
+                    if (difference > threshold)
+                    {
+                        break;
+                    }
+                } while (true);
 
                 // Вычисляем модуль N и функцию Эйлера phi(N)
                 BigInteger n = p * q;
@@ -72,19 +82,25 @@ namespace CryptoLib.RSA
             }
         }
 
-        // Генерация "сильного" простого числа для защиты от атаки Ферма
+        // Генерация "сильного" простого числа для защиты от атаки Поларда
+        // ищем безопасное простое число - p = 2q + 1
+        // зачем? простое число считается сильным, если есть большой сомножитель:
+        // p-1 имеет большой гигантский сомножитель и p+1
+        // тут p-1 = 2q, сомножитель большой очевиден
         private BigInteger GenerateStrongPrime(int bitLength)
         {
             while (true)
             {
 
+                // находим p
                 var candidate = PrimalityTestBase.GenerateRandomBigInteger(
                     BigInteger.Pow(2, bitLength - 1),
                     BigInteger.Pow(2, bitLength) - 1
                 );
                 if (_primalityTest.IsPrime(candidate, _probability))
                 {
-
+                    
+                    // q = (p - 1) / 2 - проверяем, что эта дичь тоже простое, это и есть защита
                     if (_primalityTest.IsPrime((candidate - 1) / 2, _probability))
                     {
                         return candidate;
@@ -110,11 +126,11 @@ namespace CryptoLib.RSA
             // Для 1024 бит это означает, что нам нужно проверить в среднем ~355 кандидатов.
             while (true)
             {
-                // 1. Создаем случайную последовательность байт нужной длины.
+                // Создаем случайную последовательность байт нужной длины.
                 int byteCount = (bits + 7) / 8;
                 byte[] bytes = RandomNumberGenerator.GetBytes(byteCount);
 
-                // 2. Формируем из нее число, гарантируя нужную битность и нечетность.
+                // Формируем из нее число, гарантируя нужную битность и нечетность.
                 // Устанавливаем старший бит, чтобы число имело длину ровно 'bits'.
                 int lastByteBits = bits % 8;
                 if (lastByteBits == 0) lastByteBits = 8;

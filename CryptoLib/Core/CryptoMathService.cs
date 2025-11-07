@@ -1,4 +1,5 @@
 using CryptoLib.Interfaces;
+using CryptoLib.Primality.Implementations;
 using System.Numerics;
 
 namespace CryptoLib.Core
@@ -119,8 +120,7 @@ namespace CryptoLib.Core
         /// (a/p) ≡ a^((p-1)/2) (mod p)
         /// </summary>
         /// <param name="a">Целое число.</param>
-        /// <param name="p">Нечетное простое число. Метод не выполняет проверку p на простоту,
-        /// предполагая, что это гарантируется вызывающей стороной.</param>
+        /// <param name="p">Нечетное простое число. </param>
         /// <returns>
         ///  1, если a является квадратичным вычетом по модулю p.
         /// -1, если a является квадратичным невычетом по модулю p.
@@ -130,6 +130,13 @@ namespace CryptoLib.Core
         {
             if (p < 3 || p % 2 == 0)
                 throw new ArgumentException("Модуль p должен быть нечетным простым числом больше 2.", nameof(p));
+
+            IPrimalityTest primalityTest = new MillerRabinTest(this);
+            if (!primalityTest.IsPrime(p, 0.99999))
+            {
+                throw new ArgumentException("Модуль p должен быть простым числом.", nameof(p));
+            }
+
 
             var exponent = (p - 1) / 2;
 
@@ -151,6 +158,9 @@ namespace CryptoLib.Core
         /// <summary>
         /// Вычисляет символ Якоби (a/n) с использованием свойств
         /// квадратичной взаимности без факторизации n.
+        /// Используется в тесте простоты Соловея-Штрассена
+        /// По сути обобщает символ Лежандра на любые нечетные составные n: раскладываем n на произведение, и по сути
+        /// перемножаем символы Лежандра
         /// </summary>
         /// <param name="a">Целое число.</param>
         /// <param name="n">Положительное нечетное целое число.</param>
@@ -171,8 +181,13 @@ namespace CryptoLib.Core
             if (a == 0) return 0;
             
             int j = 1;
-            
-            // 3. Обработка двоек в 'a'
+
+            // Обработка двоек в 'a'
+            // Пока a четное
+            // раскладываем по сути: a = 2^k * a`, a` - нечетное
+            // основано на свойстве:
+            // (2/n) = 1, n = 1 или 8 mod 8
+            // (2/n) = -1, n = 3 или 5 mod 8
             while ((a & 1) == 0)
             {
                 a >>= 1;

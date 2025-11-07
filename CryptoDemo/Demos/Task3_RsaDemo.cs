@@ -11,11 +11,10 @@ namespace CryptoDemo.Demos
             Console.WriteLine("--- Демонстрация Задания 3: RSA Шифрование ---");
 
             
-            // Используем самый надежный тест и достаточную длину ключа для демонстрации.
-            // В реальных системах битность должна быть 2048 или выше.
+            
             var testType = PrimalityTestType.MillerRabin;
             var probability = 0.9999;
-            var bitLength = 256; // 256 бит для p и q, итоговый ключ ~512 бит.
+            var bitLength = 256;
 
             Console.WriteLine($"Настройки: Тест={testType}, Вероятность={probability}, Битность p/q={bitLength}");
             Console.WriteLine("\n[1] Создание сервиса RSA...");

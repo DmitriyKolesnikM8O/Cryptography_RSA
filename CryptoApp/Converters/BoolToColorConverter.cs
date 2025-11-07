@@ -13,7 +13,6 @@ namespace CryptoApp.Converters
             {
                 return isPrime ? Brushes.Green : Brushes.Red;
             }
-            // По умолчанию (когда value is null) цвет будет серым
             return Brushes.Gray;
         }
 

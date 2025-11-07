@@ -18,7 +18,7 @@ namespace CryptoLib.Primality
         }
 
         /// <summary>
-        /// Это "Шаблонный метод". Он определяет скелет алгоритма проверки на простоту.
+        /// скелет алгоритма проверки на простоту.
         /// </summary>
         public bool IsPrime(BigInteger number, double probability)
         {
@@ -63,7 +63,7 @@ namespace CryptoLib.Primality
         {
             return (int)Math.Ceiling(-Math.Log2(1 - probability));
 
-            // return 1; Это если нужно будет показать, как Ферма и Соловей-Разбойник умирают под 561 и другими числами Кармайкла
+            // return 1; Это если нужно показать, как Ферма и Соловей-Разбойник умирают под 561 и другими числами Кармайкла
         }
         
         /// <summary>

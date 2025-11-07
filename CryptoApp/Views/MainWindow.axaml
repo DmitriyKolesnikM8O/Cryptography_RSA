@@ -8,7 +8,7 @@
         Width="850" Height="600">
 
     <TabControl>
-        <!-- ВКЛАДКА №1: RSA ШИФРОВАНИЕ (УЖЕ РАБОТАЕТ) -->
+        <!-- RSA -->
         <TabItem Header="RSA Шифрование">
             <DockPanel>
                 <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" BorderBrush="LightGray" Padding="5" Margin="0,10,0,0">
@@ -49,7 +49,7 @@
             </DockPanel>
         </TabItem>
 
-        <!-- ВКЛАДКА №2: ТЕСТЕР ПРОСТОТЫ (ИСПРАВЛЕННАЯ) -->
+        <!-- ТЕСТЕР ПРОСТОТЫ -->
         <TabItem Header="Тестер простоты">
             <StackPanel Spacing="10" Margin="20">
                 <TextBlock Text="Введите число для проверки на простоту:" FontSize="16"/>
@@ -66,10 +66,10 @@
             </StackPanel>
         </TabItem>
 
+        <!-- АТАКА ВИНЕРА -->
         <TabItem Header="Атака Винера">
         <Grid ColumnDefinitions="320, *" Margin="10">
             
-            <!-- Левая колонка: Управление -->
             <StackPanel Spacing="10" Margin="0,0,10,0">
                 <TextBlock Text="Уязвимый открытый ключ:" FontSize="16"/>
                 <TextBlock Text="Экспонента (E):"/>
@@ -81,7 +81,6 @@
                 <Button Content="Выполнить атаку" Command="{Binding ExecuteWienersAttackCommand}"/>
             </StackPanel>
             
-            <!-- Правая колонка: Результаты -->
             <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10">
                 <ScrollViewer>
                     <StackPanel Spacing="10">
@@ -95,7 +94,6 @@
                         <TextBox Text="{Binding WienersAttackFoundPhi}" IsReadOnly="True" IsVisible="{Binding WienersAttackFoundPhi, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                         
                         <TextBlock Text="Вычисленные подходящие дроби (k/d):" FontWeight="SemiBold" Margin="0,10,0,0" IsVisible="{Binding WienersAttackConvergents, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                        <!-- Список для отображения дробей -->
                         <ItemsControl ItemsSource="{Binding WienersAttackConvergents}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>

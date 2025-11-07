@@ -18,7 +18,7 @@ namespace CryptoApp.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        // --- Свойства для вкладки RSA ---
+        //Свойства для вкладки RSA
         [ObservableProperty] private int _selectedBitLength = 256;
         public List<int> AvailableBitLengths { get; } = new List<int> { 128, 256, 512, 1024 };
 
@@ -33,7 +33,7 @@ namespace CryptoApp.ViewModels
         [ObservableProperty] private string _encryptedMessage = "";
         [ObservableProperty] private string _decryptedMessage = "";
 
-        // --- Свойства для вкладки "Тестер простоты" ---
+        // Свойства для вкладки "Тестер простоты"
         [ObservableProperty] private string _numberToTest = "15485863";
         [ObservableProperty] private PrimalityTestType _selectedTestTypeForCheck = PrimalityTestType.MillerRabin;
         [ObservableProperty] private string _primalityTestResult = "";
@@ -49,7 +49,7 @@ namespace CryptoApp.ViewModels
         private const double Probability = 0.9999;
         private const double PrimalityCheckProbability = 0.9999;
 
-        // --- Команды для вкладки RSA ---
+        // Команды для вкладки RSA
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private async Task GenerateKeysAsync()
         {
@@ -107,7 +107,7 @@ namespace CryptoApp.ViewModels
             catch (Exception ex) { StatusMessage = $"Ошибка дешифрования: {ex.Message}"; }
         }
 
-        // --- Команда для вкладки "Тестер простоты" ---
+        // Команда для вкладки "Тестер простоты"
         [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
         private void CheckPrimality()
         {
@@ -160,13 +160,11 @@ namespace CryptoApp.ViewModels
         [ObservableProperty]
         private IReadOnlyList<ContinuedFraction>? _wienersAttackConvergents;
 
-        // Сервис для атаки. Создаем его один раз.
         private readonly IWienersAttackService _wienersAttackService = new WienersAttackService();
 
         [RelayCommand]
         private void PreloadWeakKey()
         {
-            // Используем тот же 100% рабочий ключ из учебника
             WienersAttackE = "17993";
             WienersAttackN = "90581";
             StatusMessage = "Уязвимый ключ загружен.";
